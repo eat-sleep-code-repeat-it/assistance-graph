@@ -1,18 +1,22 @@
 # Questionnaire Response Examples
 
 ## Query questionnaire responses
-Get all responses for a specific questionnaire. Returns an empty array if either:
-- The questionnaire doesn't exist
-- The questionnaire exists but has no responses
+Responses are stored per questionnaire version. To fetch responses you need a `versionId` (the UUID of a QuestionnaireVersion). You can get that `versionId` from the `questionnaireVersion` query or from the `questionnaires` query.
+
+Returns an empty array if either:
+- The questionnaire (version) doesn't exist
+- The questionnaire version exists but has no responses
 
 ```graphql
+# Example: fetch responses for a specific versionId
 query {
-  questionnaireResponses(questionnaireId: "ef5e4f13-f099-4598-a560-2c595aea7b9a") {
+  questionnaireResponses(versionId: "e41e6b0f-b14c-4e3f-9983-95f01a9e3317") {
     id
     status
     answers
     submittedAt
-    questionnaire {
+    questionnaireVersion {
+      id
       version
       sections {
         viewGroups {
@@ -29,7 +33,7 @@ query {
 ```
 
 Example response when no responses exist:
-```graphql
+```json
 {
   "data": {
     "questionnaireResponses": []
@@ -46,7 +50,8 @@ query {
     status
     answers
     submittedAt
-    questionnaire {
+    questionnaireVersion {
+      id
       version
       sections {
         viewGroups {
@@ -63,11 +68,14 @@ query {
 ```
 
 ## Create a new response
-Create a response for a questionnaire:
+
+There are two ways to create a response:
+
+1. Using a version ID directly (if you already have it):
 ```graphql
 mutation {
   createQuestionnaireResponse(input: {
-    questionnaireId: "ef5e4f13-f099-4598-a560-2c595aea7b9a"
+    versionId: "e41e6b0f-b14c-4e3f-9983-95f01a9e3317"
     respondentId: "user-123"  # Optional
     answers: "{\"question1\": \"answer1\", \"consent\": true}"
   }) {
@@ -76,6 +84,32 @@ mutation {
     answers
     createdAt
     respondentId
+    questionnaireVersion {
+      id
+      version
+    }
+  }
+}
+```
+
+2. Using questionnaire ID and version number (more convenient):
+```graphql
+mutation {
+  createQuestionnaireResponseByVersion(input: {
+    questionnaireId: "841c8558-5ef9-4201-bbf3-6ca01d6f0f45"
+    version: 2  # The version number you want to respond to
+    respondentId: "user-123"  # Optional
+    answers: "{\"question1\": \"answer1\", \"consent\": true}"
+  }) {
+    id
+    status        # Will be "in_progress"
+    answers
+    createdAt
+    respondentId
+    questionnaireVersion {
+      id
+      version
+    }
   }
 }
 ```

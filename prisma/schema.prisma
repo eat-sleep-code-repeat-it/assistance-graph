@@ -15,38 +15,50 @@ generator client {
 // - ViewGroup contains Questions
 
 model Questionnaire {
-  id          String                 @id @default(uuid())
-  version     Int
-  createdAt   DateTime              @default(now())
-  updatedAt   DateTime              @updatedAt
-  sections    Section[]
-  responses   QuestionnaireResponse[]
+  id             String                 @id @default(uuid())
+  currentVersion Int                    @default(1)
+  createdAt      DateTime               @default(now())
+  updatedAt      DateTime               @updatedAt
+  versions       QuestionnaireVersion[]
 
   @@map("questionnaires")
 }
 
-model QuestionnaireResponse {
-  id              String        @id @default(uuid())
-  questionnaire   Questionnaire @relation(fields: [questionnaireId], references: [id])
+model QuestionnaireVersion {
+  id              String                  @id @default(uuid())
+  questionnaire   Questionnaire           @relation(fields: [questionnaireId], references: [id])
   questionnaireId String
-  respondentId    String?       // Optional: ID of the person who responded
-  status         String        // e.g., "in_progress", "completed"
-  answers        String        // JSON string containing the answers
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
-  submittedAt    DateTime?     // When the response was submitted
+  version         Int
+  sections        Section[]
+  responses       QuestionnaireResponse[]
+  createdAt       DateTime                @default(now())
 
-  @@index([questionnaireId])
+  @@unique([questionnaireId, version])
+  @@map("questionnaire_versions")
+}
+
+model QuestionnaireResponse {
+  id                   String               @id @default(uuid())
+  questionnaireVersion QuestionnaireVersion @relation(fields: [versionId], references: [id])
+  versionId            String
+  respondentId         String? // Optional: ID of the person who responded
+  status               String // e.g., "in_progress", "completed"
+  answers              String // JSON string containing the answers
+  createdAt            DateTime             @default(now())
+  updatedAt            DateTime             @updatedAt
+  submittedAt          DateTime? // When the response was submitted
+
+  @@index([versionId])
   @@map("questionnaire_responses")
 }
 
 model Section {
-  id              String        @id @default(uuid())
-  questionnaire   Questionnaire @relation(fields: [questionnaireId], references: [id])
-  questionnaireId String
-  viewGroups      ViewGroup[]
+  id                     String               @id @default(uuid())
+  questionnaireVersion   QuestionnaireVersion @relation(fields: [questionnaireVersionId], references: [id])
+  questionnaireVersionId String
+  viewGroups             ViewGroup[]
 
-  @@index([questionnaireId])
+  @@index([questionnaireVersionId])
   @@map("sections")
 }
 

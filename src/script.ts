@@ -1,56 +1,72 @@
 // 1
 import { PrismaClient } from '@prisma/client'
- 
-// 2
+
 const prisma = new PrismaClient()
 
-// example: create a questionnaire
+// Create a questionnaire with an initial version, sections, view groups and questions
 async function createQuestionnaire() {
-    
     return await prisma.questionnaire.create({
-    data: {
-        version: 1,
-        sections: {
-        create: [
-            {
-            viewGroups: {
+        data: {
+            // currentVersion defaults to 1, but we explicitly create the initial version
+            versions: {
                 create: [
-                {
-                    viewId: 'intro',
-                    name: 'Introduction',
-                    titleText: 'Welcome',
-                    questions: {
-                    create: [
-                        { name: 'consent', keyName: 'userConsent', text: 'Do you agree?', type: 'YesNo', order: 1, required: true }
-                    ]
-                    }
-                }
-                ]
-            }
-            }
-        ]
-        }
-    },
-    include: { sections: { include: { viewGroups: { include: { questions: true } } } } }
+                    {
+                        version: 1,
+                        sections: {
+                            create: [
+                                {
+                                    viewGroups: {
+                                        create: [
+                                            {
+                                                viewId: 'intro',
+                                                name: 'Introduction',
+                                                titleText: 'Welcome',
+                                                questions: {
+                                                    create: [
+                                                        {
+                                                            name: 'consent',
+                                                            keyName: 'userConsent',
+                                                            text: 'Do you agree?',
+                                                            type: 'YesNo',
+                                                            order: 1,
+                                                            required: true,
+                                                        },
+                                                    ],
+                                                },
+                                            },
+                                        ],
+                                    },
+                                },
+                            ],
+                        },
+                    },
+                ],
+            },
+        },
+        include: {
+            versions: {
+                include: { sections: { include: { viewGroups: { include: { questions: true } } } } },
+            },
+        },
     })
-
 }
 
-// 3
 async function main() {
-  const allLinks = await prisma.questionnaire.findMany()
-  console.log(allLinks)
+    // show existing questionnaires
+    const before = await prisma.questionnaire.findMany({ include: { versions: true } })
+    console.log('Before:', before)
 
-  // example: create a questionnaire
-  const newOne = await createQuestionnaire()
+    const created = await createQuestionnaire()
+    console.log('Created:', created)
 
-  const bllLinks = await prisma.questionnaire.findMany()
-  console.log(allLinks)
+    const after = await prisma.questionnaire.findMany({ include: { versions: { include: { sections: { include: { viewGroups: { include: { questions: true } } } } } } } })
+    console.log('After:', after)
 }
- 
-// 4
+
 main()
-  // 5
-  .finally(async () => {
-    await prisma.$disconnect()
-  })
+    .catch((e) => {
+        console.error(e)
+    })
+    .finally(async () => {
+        await prisma.$disconnect()
+    })

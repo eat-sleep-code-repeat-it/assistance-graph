@@ -1,52 +1,62 @@
 # Questionnaire Examples
 
 ## Query All Questionnaires
-Get all questionnaires with their sections, groups, and questions:
+Get all questionnaires with their versions, sections, groups, and questions:
 ```graphql
 query {
   questionnaires {
     id
-    version
+    currentVersion
     createdAt
     updatedAt
-    sections {
-      viewGroups {
-        viewId
-        name
-        titleText
-        questions {
+    versions {
+      id
+      version
+      createdAt
+      sections {
+        viewGroups {
+          viewId
           name
-          keyName
-          text
-          type
-          required
+          titleText
+          questions {
+            name
+            keyName
+            text
+            type
+            required
+          }
         }
       }
-    }
-    responses {
-      id
-      status
+      responses {
+        id
+        status
+      }
     }
   }
 }
 ```
 
 ## Query Specific Questionnaire
-Get a questionnaire by ID or version:
+Get a questionnaire by ID and inspect a particular version (use `questionnaireVersion` to fetch a specific version by number):
 ```graphql
 query {
   questionnaire(id: "ef5e4f13-f099-4598-a560-2c595aea7b9a") {
     id
-    version
+    currentVersion
     createdAt
-    sections {
-      viewGroups {
-        name
-        titleText
-        questions {
-          text
-          type
-          required
+    versions {
+      id
+      version
+      createdAt
+      sections {
+        viewGroups {
+          name
+          titleText
+          questions {
+            text
+            type
+            required
+          }
         }
       }
     }
