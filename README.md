@@ -10,6 +10,8 @@ cd C:/workspace/assistance-graph/assistance-graph
 npm run dev - will start the server and restarts it on every change.
 
 # start the server
-npm run start 
+npm run start
 
+# Runs the prettier formatter for all files in the current directory
+npx prettier . --write
 ```
