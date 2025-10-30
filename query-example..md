@@ -47,6 +47,21 @@ query {
   }
 }
 
+// 4. Get All Questions in All ViewGroups
+query {
+  questionnaire {
+    sections {
+      viewGroups {
+        questions {
+          name
+          text
+          type
+        }
+      }
+    }
+  }
+}
+
 // 4.Get just the questions from all views:
 query {
   questionnaire {

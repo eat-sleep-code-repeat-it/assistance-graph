@@ -3,7 +3,7 @@ import { createSchema } from 'graphql-yoga'
 const typeDefinitions = /* GraphQL */ `
   type Query {
     info: String!
-    questionnaire: Questionnaire!
+    questionnaireTemplate: [Questionnaire!]!
   }
  
   type Question {
@@ -33,6 +33,10 @@ const typeDefinitions = /* GraphQL */ `
   }
 
   type Questionnaire  {
+    id: String
+    version: Int!
+    createdAt: String!
+    updatedAt: String!    
     sections: [Section!]!   
   }
 `
@@ -64,6 +68,10 @@ type Section = {
 }
 
 type Questionnaire = {
+  id: string
+  createdAt: string
+  updatedAt: string
+  version: number
   sections: Section[]   
 }
 
@@ -98,16 +106,29 @@ const sections: Section[] = [
     viewGroups: viewGroups
   }
 ]
-const questionnaire: Questionnaire = {
-  sections: sections
-}
 
- 
+const questionnaires: Questionnaire[] = [
+  {
+    id: '1',
+    version: 1,
+    createdAt: 'String',
+    updatedAt: 'String',  
+    sections: sections
+  },
+  {
+    id: '1',
+    version: 1,
+    createdAt: 'String2',
+    updatedAt: 'String2',  
+    sections: sections
+  }
+]
+
 const resolvers = {
   Query: {
     info: () => `This is the API of assistance-graph`,
-    questionnaire: () => questionnaire
-  }  
+    questionnaireTemplate: () => questionnaires
+  }
 }
  
 export const schema = createSchema({
