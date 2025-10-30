@@ -152,44 +152,25 @@ const resolvers = {
       })
     },
     questionnaireResponses: async (_: any, { questionnaireId }: { questionnaireId: string }, context: GraphQLContext) => {
-      return context.prisma.questionnaireResponse.findMany({
-        where: { questionnaireId },
-        include: {
-          questionnaire: {
-            include: {
-              sections: {
-                include: {
-                  viewGroups: {
-                    include: {
-                      questions: true
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      })
+      const result = await context.prisma.questionnaire.findUnique({
+        where: { id: questionnaireId },
+        include: { responses: true }
+      });
+      return result?.responses || [];
     },
     questionnaireResponse: async (_: any, { id }: { id: string }, context: GraphQLContext) => {
-      return context.prisma.questionnaireResponse.findUnique({
-        where: { id },
+      const allResponses = await context.prisma.questionnaire.findMany({
+        where: {},
         include: {
-          questionnaire: {
-            include: {
-              sections: {
-                include: {
-                  viewGroups: {
-                    include: {
-                      questions: true
-                    }
-                  }
-                }
-              }
+          responses: {
+            where: {
+              id: id
             }
           }
         }
-      })
+      });
+      const response = allResponses.flatMap(q => q.responses).find(r => r.id === id);
+      return response || null;
     },
     questionnaire: async (_: any, { id, version }: { id?: string, version?: number }, context: GraphQLContext) => {
       return context.prisma.questionnaire.findMany({
