@@ -7,7 +7,7 @@ query {
 
 // 2.Get full questionnaire:
 query {
-  questionnaireTemplate {
+  questionnaires {
     id
     version
     createdAt
@@ -38,7 +38,7 @@ query {
 
 // 3.Get just the views without questions:
 query {
-  questionnaireTemplate {
+  questionnaires {
     id
     version
     createdAt
@@ -57,7 +57,7 @@ query {
 
 // 4. Get All Questions in All ViewGroups
 query {
-  questionnaireTemplate {
+  questionnaires {
     id
     version
     createdAt
@@ -76,7 +76,7 @@ query {
 
 // 4.Get just the questions from all views:
 query {
-  questionnaireTemplate {
+  questionnaires {
     id
     version
     createdAt
@@ -96,6 +96,50 @@ query {
   }
 }
 
+// 5.query a questionnaire by ID 
+query {
+  questionnaire(id: "1") {
+    id
+    version
+    createdAt
+    updatedAt
+    sections {
+      viewGroups {
+        viewId
+        name
+        titleText
+        questions {
+          name
+          text
+          type
+        }
+      }
+    }
+  }
+}
 
+// 6.query a questionnaire by version 
+query {
+  questionnaire(version: 1) {
+    id
+    version
+    createdAt
+    updatedAt
+  }
+}
 
-
+// 7.query a questionnaire by both ID and version 
+query {
+  questionnaire(id: "1", version: 1) {
+    id
+    version
+    createdAt
+    updatedAt
+    sections {
+      viewGroups {
+        viewId
+        name
+      }
+    }
+  }
+}

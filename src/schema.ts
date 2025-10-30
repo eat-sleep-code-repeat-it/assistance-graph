@@ -3,7 +3,8 @@ import { createSchema } from 'graphql-yoga'
 const typeDefinitions = /* GraphQL */ `
   type Query {
     info: String!
-    questionnaireTemplate: [Questionnaire!]!
+    questionnaires: [Questionnaire!]!
+    questionnaire(id: String, version: Int): [Questionnaire!]!
   }
 
   type Mutation {
@@ -122,7 +123,21 @@ type QuestionnaireInput = {
 const resolvers = {
   Query: {
     info: () => `This is the API of assistance-graph`,
-    questionnaireTemplate: () => questionnaires
+    questionnaires: () => questionnaires,
+    questionnaire: (_: any, { id, version }: { id?: string, version?: number }) => {
+      return questionnaires.filter(q => {
+        if (id && version) {
+          return q.id === id && q.version === version;
+        }
+        if (id) {
+          return q.id === id;
+        }
+        if (version) {
+          return q.version === version;
+        }
+        return false; // If no parameters provided, return empty array
+      });
+    }
   },
   Mutation: {
     createQuestionnaire: (_: any, { input }: { input: QuestionnaireInput }) => {
