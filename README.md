@@ -34,4 +34,7 @@ npx prisma studio
 
 
 npx prisma generate
+
+## reset all tables to empty
+npx prisma migrate reset --force
 ```

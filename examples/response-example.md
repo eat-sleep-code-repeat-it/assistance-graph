@@ -25,7 +25,7 @@ query {
 // Create a new response:
 mutation {
   createQuestionnaireResponse(input: {
-    questionnaireId: "ef5e4f13-f099-4598-a560-2c595aea7b9a"
+    questionnaireId: "df7f681a-388b-403c-beb7-77271d727292"
     answers: "{\"question1\": \"answer1\"}"
   }) {
     id

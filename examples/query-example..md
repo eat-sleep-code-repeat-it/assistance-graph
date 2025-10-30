@@ -98,7 +98,7 @@ query {
 
 // 5.query a questionnaire by ID 
 query {
-  questionnaire(id: "1") {
+  questionnaire(id: "df7f681a-388b-403c-beb7-77271d727292") {
     id
     version
     createdAt
@@ -130,7 +130,7 @@ query {
 
 // 7.query a questionnaire by both ID and version 
 query {
-  questionnaire(id: "1", version: 1) {
+  questionnaire(id: "df7f681a-388b-403c-beb7-77271d727292", version: 2) {
     id
     version
     createdAt
