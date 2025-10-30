@@ -17,4 +17,12 @@ pnpm prettier . --write
 
 
 pnpm run dev
+
+# http://localhost:4000/graphql
+query {
+  hello
+}
+
+or 
+curl -X POST http://localhost:4000/graphql -H "Content-type: application/json" --data-raw '{"query": "query { hello }"}'
 ```
