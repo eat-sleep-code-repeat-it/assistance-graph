@@ -15,13 +15,29 @@ generator client {
 // - ViewGroup contains Questions
 
 model Questionnaire {
-  id        String    @id @default(uuid())
-  version   Int
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  sections  Section[]
+  id          String                 @id @default(uuid())
+  version     Int
+  createdAt   DateTime              @default(now())
+  updatedAt   DateTime              @updatedAt
+  sections    Section[]
+  responses   QuestionnaireResponse[]
 
   @@map("questionnaires")
+}
+
+model QuestionnaireResponse {
+  id              String        @id @default(uuid())
+  questionnaire   Questionnaire @relation(fields: [questionnaireId], references: [id])
+  questionnaireId String
+  respondentId    String?       // Optional: ID of the person who responded
+  status         String        // e.g., "in_progress", "completed"
+  answers        String        // JSON string containing the answers
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  submittedAt    DateTime?     // When the response was submitted
+
+  @@index([questionnaireId])
+  @@map("questionnaire_responses")
 }
 
 model Section {

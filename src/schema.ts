@@ -6,11 +6,16 @@ const typeDefinitions = /* GraphQL */ `
     info: String!
     questionnaires: [Questionnaire!]!
     questionnaire(id: String, version: Int): [Questionnaire!]!
+    questionnaireResponses(questionnaireId: String!): [QuestionnaireResponse!]!
+    questionnaireResponse(id: String!): QuestionnaireResponse
   }
 
   type Mutation {
     createQuestionnaire(input: QuestionnaireInput!): Questionnaire!
     updateQuestionnaire(id: String!, input: QuestionnaireInput!): Questionnaire!
+    createQuestionnaireResponse(input: QuestionnaireResponseInput!): QuestionnaireResponse!
+    updateQuestionnaireResponse(id: String!, input: QuestionnaireResponseUpdateInput!): QuestionnaireResponse!
+    submitQuestionnaireResponse(id: String!): QuestionnaireResponse!
   }
 
   input QuestionnaireInput {
@@ -75,7 +80,30 @@ const typeDefinitions = /* GraphQL */ `
     version: Int!
     createdAt: String!
     updatedAt: String!    
-    sections: [Section!]!   
+    sections: [Section!]!
+    responses: [QuestionnaireResponse!]!
+  }
+
+  type QuestionnaireResponse {
+    id: String!
+    questionnaireId: String!
+    questionnaire: Questionnaire!
+    respondentId: String
+    status: String!
+    answers: String!
+    createdAt: String!
+    updatedAt: String!
+    submittedAt: String
+  }
+
+  input QuestionnaireResponseInput {
+    questionnaireId: String!
+    respondentId: String
+    answers: String!
+  }
+
+  input QuestionnaireResponseUpdateInput {
+    answers: String!
   }
 `
 
@@ -115,6 +143,47 @@ const resolvers = {
               viewGroups: {
                 include: {
                   questions: true
+                }
+              }
+            }
+          },
+          responses: true
+        }
+      })
+    },
+    questionnaireResponses: async (_: any, { questionnaireId }: { questionnaireId: string }, context: GraphQLContext) => {
+      return context.prisma.questionnaireResponse.findMany({
+        where: { questionnaireId },
+        include: {
+          questionnaire: {
+            include: {
+              sections: {
+                include: {
+                  viewGroups: {
+                    include: {
+                      questions: true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      })
+    },
+    questionnaireResponse: async (_: any, { id }: { id: string }, context: GraphQLContext) => {
+      return context.prisma.questionnaireResponse.findUnique({
+        where: { id },
+        include: {
+          questionnaire: {
+            include: {
+              sections: {
+                include: {
+                  viewGroups: {
+                    include: {
+                      questions: true
+                    }
+                  }
                 }
               }
             }
@@ -253,6 +322,79 @@ const resolvers = {
               viewGroups: {
                 include: {
                   questions: true
+                }
+              }
+            }
+          }
+        }
+      })
+    },
+    createQuestionnaireResponse: async (_: any, { input }: { input: { questionnaireId: string, respondentId?: string, answers: string } }, context: GraphQLContext) => {
+      return context.prisma.questionnaireResponse.create({
+        data: {
+          questionnaireId: input.questionnaireId,
+          respondentId: input.respondentId,
+          status: 'in_progress',
+          answers: input.answers
+        },
+        include: {
+          questionnaire: {
+            include: {
+              sections: {
+                include: {
+                  viewGroups: {
+                    include: {
+                      questions: true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      })
+    },
+    updateQuestionnaireResponse: async (_: any, { id, input }: { id: string, input: { answers: string } }, context: GraphQLContext) => {
+      return context.prisma.questionnaireResponse.update({
+        where: { id },
+        data: {
+          answers: input.answers,
+          updatedAt: new Date()
+        },
+        include: {
+          questionnaire: {
+            include: {
+              sections: {
+                include: {
+                  viewGroups: {
+                    include: {
+                      questions: true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      })
+    },
+    submitQuestionnaireResponse: async (_: any, { id }: { id: string }, context: GraphQLContext) => {
+      return context.prisma.questionnaireResponse.update({
+        where: { id },
+        data: {
+          status: 'completed',
+          submittedAt: new Date()
+        },
+        include: {
+          questionnaire: {
+            include: {
+              sections: {
+                include: {
+                  viewGroups: {
+                    include: {
+                      questions: true
+                    }
+                  }
                 }
               }
             }
