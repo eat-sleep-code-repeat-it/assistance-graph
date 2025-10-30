@@ -1,0 +1,69 @@
+// 1
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+// 2
+generator client {
+  provider = "prisma-client-js"
+}
+
+// Models generated from src/schema.ts (GraphQL schema)
+// - Questionnaire contains Sections
+// - Section contains ViewGroups
+// - ViewGroup contains Questions
+
+model Questionnaire {
+  id        String    @id @default(uuid())
+  version   Int
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  sections  Section[]
+
+  @@map("questionnaires")
+}
+
+model Section {
+  id              String        @id @default(uuid())
+  questionnaire   Questionnaire @relation(fields: [questionnaireId], references: [id])
+  questionnaireId String
+  viewGroups      ViewGroup[]
+
+  @@index([questionnaireId])
+  @@map("sections")
+}
+
+model ViewGroup {
+  id           String     @id @default(uuid())
+  viewId       String
+  name         String
+  titleText    String
+  subTitleText String?
+  bodyText     String?
+  section      Section    @relation(fields: [sectionId], references: [id])
+  sectionId    String
+  questions    Question[]
+
+  @@index([sectionId])
+  @@map("view_groups")
+}
+
+model Question {
+  id           String    @id @default(uuid())
+  name         String
+  keyName      String
+  text         String
+  type         String
+  options      String?
+  order        Int
+  required     Boolean
+  yesText      String?
+  noText       String?
+  defaultValue String?
+  viewGroup    ViewGroup @relation(fields: [viewGroupId], references: [id])
+  viewGroupId  String
+
+  @@index([viewGroupId])
+  @@map("questions")
+}

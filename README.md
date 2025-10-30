@@ -25,4 +25,13 @@ query {
 
 or 
 curl -X POST http://localhost:4000/graphql -H "Content-type: application/json" --data-raw '{"query": "query { hello }"}'
+
+
+
+npx prisma db push
+npx prisma migrate dev
+npx prisma studio
+
+
+npx prisma generate
 ```

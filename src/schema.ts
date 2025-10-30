@@ -1,4 +1,5 @@
 import { createSchema } from 'graphql-yoga'
+import type { GraphQLContext } from './context'
  
 const typeDefinitions = /* GraphQL */ `
   type Query {
@@ -78,91 +79,186 @@ const typeDefinitions = /* GraphQL */ `
   }
 `
 
-type Question = {
-  name: string
-  keyName: string
-  text: string
-  type: string  // YesNo, Radio, Input, Checkbox
-  options: string // array of (selected,text,value,inputGroup )
-  order: number
-  required: boolean
-  yesText?: string
-  noText?: string
-  defaultValue?: string
-}
-
-type ViewGroup = {
-  viewId: string
-  name: string  
-  titleText: string
-  subTitleText: string
-  bodyText: string
-  questions: Question[]   
-}
-
-type Section = {
-  viewGroups: ViewGroup[]
-}
-
-type Questionnaire = {
-  id: string
-  createdAt: string
-  updatedAt: string
-  version: number
-  sections: Section[]   
-}
-
-const questionnaires: Questionnaire[] = [ 
-]
-
 type QuestionnaireInput = {
   version: number
-  sections: Section[]
+  sections: {
+    viewGroups: {
+      viewId: string
+      name: string
+      titleText: string
+      subTitleText?: string
+      bodyText?: string
+      questions: {
+        name: string
+        keyName: string
+        text: string
+        type: string
+        options?: string
+        order: number
+        required: boolean
+        yesText?: string
+        noText?: string
+        defaultValue?: string
+      }[]
+    }[]
+  }[]
 }
 
 const resolvers = {
   Query: {
     info: () => `This is the API of assistance-graph`,
-    questionnaires: () => questionnaires,
-    questionnaire: (_: any, { id, version }: { id?: string, version?: number }) => {
-      return questionnaires.filter(q => {
-        if (id && version) {
-          return q.id === id && q.version === version;
+    questionnaires: async (_: any, __: any, context: GraphQLContext) => {
+      return context.prisma.questionnaire.findMany({
+        include: {
+          sections: {
+            include: {
+              viewGroups: {
+                include: {
+                  questions: true
+                }
+              }
+            }
+          }
         }
-        if (id) {
-          return q.id === id;
+      })
+    },
+    questionnaire: async (_: any, { id, version }: { id?: string, version?: number }, context: GraphQLContext) => {
+      return context.prisma.questionnaire.findMany({
+        where: {
+          AND: [
+            id ? { id } : {},
+            version ? { version } : {}
+          ]
+        },
+        include: {
+          sections: {
+            include: {
+              viewGroups: {
+                include: {
+                  questions: true
+                }
+              }
+            }
+          }
         }
-        if (version) {
-          return q.version === version;
-        }
-        return false; // If no parameters provided, return empty array
-      });
+      })
     }
   },
   Mutation: {
-    createQuestionnaire: (_: any, { input }: { input: QuestionnaireInput }) => {
-      const newQuestionnaire: Questionnaire = {
-        id: String(questionnaires.length + 1),
-        version: input.version,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        sections: input.sections
-      }
-      questionnaires.push(newQuestionnaire)
-      return newQuestionnaire
+    createQuestionnaire: async (_: any, { input }: { input: QuestionnaireInput }, context: GraphQLContext) => {
+      return context.prisma.questionnaire.create({
+        data: {
+          version: input.version,
+          sections: {
+            create: input.sections.map(section => ({
+              viewGroups: {
+                create: section.viewGroups.map(viewGroup => ({
+                  viewId: viewGroup.viewId,
+                  name: viewGroup.name,
+                  titleText: viewGroup.titleText,
+                  subTitleText: viewGroup.subTitleText,
+                  bodyText: viewGroup.bodyText,
+                  questions: {
+                    create: viewGroup.questions.map(question => ({
+                      name: question.name,
+                      keyName: question.keyName,
+                      text: question.text,
+                      type: question.type,
+                      options: question.options,
+                      order: question.order,
+                      required: question.required,
+                      yesText: question.yesText,
+                      noText: question.noText,
+                      defaultValue: question.defaultValue
+                    }))
+                  }
+                }))
+              }
+            }))
+          }
+        },
+        include: {
+          sections: {
+            include: {
+              viewGroups: {
+                include: {
+                  questions: true
+                }
+              }
+            }
+          }
+        }
+      })
     },
-    updateQuestionnaire: (_: any, { id, input }: { id: string, input: QuestionnaireInput }) => {
-      const index = questionnaires.findIndex(q => q.id === id)
-      if (index === -1) {
-        throw new Error(`Questionnaire with id ${id} not found`)
-      }
-      const updatedQuestionnaire: Questionnaire = {
-        ...questionnaires[index],
-        ...input,
-        updatedAt: new Date().toISOString()
-      }
-      questionnaires[index] = updatedQuestionnaire
-      return updatedQuestionnaire
+    updateQuestionnaire: async (_: any, { id, input }: { id: string, input: QuestionnaireInput }, context: GraphQLContext) => {
+      // First, delete all related records (due to Prisma's limitation with nested updates)
+      await context.prisma.question.deleteMany({
+        where: {
+          viewGroup: {
+            section: {
+              questionnaireId: id
+            }
+          }
+        }
+      })
+      await context.prisma.viewGroup.deleteMany({
+        where: {
+          section: {
+            questionnaireId: id
+          }
+        }
+      })
+      await context.prisma.section.deleteMany({
+        where: {
+          questionnaireId: id
+        }
+      })
+
+      // Then update the questionnaire with new data
+      return context.prisma.questionnaire.update({
+        where: { id },
+        data: {
+          version: input.version,
+          sections: {
+            create: input.sections.map(section => ({
+              viewGroups: {
+                create: section.viewGroups.map(viewGroup => ({
+                  viewId: viewGroup.viewId,
+                  name: viewGroup.name,
+                  titleText: viewGroup.titleText,
+                  subTitleText: viewGroup.subTitleText,
+                  bodyText: viewGroup.bodyText,
+                  questions: {
+                    create: viewGroup.questions.map(question => ({
+                      name: question.name,
+                      keyName: question.keyName,
+                      text: question.text,
+                      type: question.type,
+                      options: question.options,
+                      order: question.order,
+                      required: question.required,
+                      yesText: question.yesText,
+                      noText: question.noText,
+                      defaultValue: question.defaultValue
+                    }))
+                  }
+                }))
+              }
+            }))
+          }
+        },
+        include: {
+          sections: {
+            include: {
+              viewGroups: {
+                include: {
+                  questions: true
+                }
+              }
+            }
+          }
+        }
+      })
     }
   }
 }
