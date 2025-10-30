@@ -5,6 +5,42 @@ const typeDefinitions = /* GraphQL */ `
     info: String!
     questionnaireTemplate: [Questionnaire!]!
   }
+
+  type Mutation {
+    createQuestionnaire(input: QuestionnaireInput!): Questionnaire!
+    updateQuestionnaire(id: String!, input: QuestionnaireInput!): Questionnaire!
+  }
+
+  input QuestionnaireInput {
+    version: Int!
+    sections: [SectionInput!]!
+  }
+
+  input SectionInput {
+    viewGroups: [ViewGroupInput!]!
+  }
+
+  input ViewGroupInput {
+    viewId: String!
+    name: String!
+    titleText: String!
+    subTitleText: String
+    bodyText: String
+    questions: [QuestionInput!]!
+  }
+
+  input QuestionInput {
+    name: String!
+    keyName: String!
+    text: String!
+    type: String!
+    options: String
+    order: Int!
+    required: Boolean!
+    yesText: String
+    noText: String
+    defaultValue: String
+  }
  
   type Question {
     name: String
@@ -75,59 +111,44 @@ type Questionnaire = {
   sections: Section[]   
 }
 
-const questions: Question[] = [
-  {
-    name: 'string',
-    keyName: 'string',
-    text: 'string',
-    type: 'string',  // YesNo, Radio, Input, Checkbox
-    options: 'string', // array of (selected,text,value,inputGroup )
-    order: 0,
-    required: true,
-    yesText: 'string',
-    noText: 'string',
-    defaultValue: 'string'  
-  }
+const questionnaires: Questionnaire[] = [ 
 ]
 
-const viewGroups: ViewGroup[] = [
-  {
-    viewId: 'string',
-    name: 'string'  ,
-    titleText: 'string',
-    subTitleText: 'string',
-    bodyText: 'string',
-    questions: questions 
-  }
-] 
-
-const sections: Section[] = [
-  {
-    viewGroups: viewGroups
-  }
-]
-
-const questionnaires: Questionnaire[] = [
-  {
-    id: '1',
-    version: 1,
-    createdAt: 'String',
-    updatedAt: 'String',  
-    sections: sections
-  },
-  {
-    id: '1',
-    version: 1,
-    createdAt: 'String2',
-    updatedAt: 'String2',  
-    sections: sections
-  }
-]
+type QuestionnaireInput = {
+  version: number
+  sections: Section[]
+}
 
 const resolvers = {
   Query: {
     info: () => `This is the API of assistance-graph`,
     questionnaireTemplate: () => questionnaires
+  },
+  Mutation: {
+    createQuestionnaire: (_: any, { input }: { input: QuestionnaireInput }) => {
+      const newQuestionnaire: Questionnaire = {
+        id: String(questionnaires.length + 1),
+        version: input.version,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        sections: input.sections
+      }
+      questionnaires.push(newQuestionnaire)
+      return newQuestionnaire
+    },
+    updateQuestionnaire: (_: any, { id, input }: { id: string, input: QuestionnaireInput }) => {
+      const index = questionnaires.findIndex(q => q.id === id)
+      if (index === -1) {
+        throw new Error(`Questionnaire with id ${id} not found`)
+      }
+      const updatedQuestionnaire: Questionnaire = {
+        ...questionnaires[index],
+        ...input,
+        updatedAt: new Date().toISOString()
+      }
+      questionnaires[index] = updatedQuestionnaire
+      return updatedQuestionnaire
+    }
   }
 }
  

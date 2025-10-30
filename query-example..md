@@ -7,7 +7,11 @@ query {
 
 // 2.Get full questionnaire:
 query {
-  questionnaire {
+  questionnaireTemplate {
+    id
+    version
+    createdAt
+    updatedAt
     sections {
       viewGroups {
           viewId
@@ -34,7 +38,11 @@ query {
 
 // 3.Get just the views without questions:
 query {
-  questionnaire {
+  questionnaireTemplate {
+    id
+    version
+    createdAt
+    updatedAt
     sections {
       viewGroups {
           viewId
@@ -49,7 +57,11 @@ query {
 
 // 4. Get All Questions in All ViewGroups
 query {
-  questionnaire {
+  questionnaireTemplate {
+    id
+    version
+    createdAt
+    updatedAt
     sections {
       viewGroups {
         questions {
@@ -64,7 +76,11 @@ query {
 
 // 4.Get just the questions from all views:
 query {
-  questionnaire {
+  questionnaireTemplate {
+    id
+    version
+    createdAt
+    updatedAt
     sections {
       viewGroups {
           name
